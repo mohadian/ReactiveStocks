@@ -1,4 +1,4 @@
-package github.mohadian.reactivestock;
+package github.mohadian.reactivestocks;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

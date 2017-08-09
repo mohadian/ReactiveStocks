@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
-import github.mohadian.reactivestock.R;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.reactivex.Observable;
