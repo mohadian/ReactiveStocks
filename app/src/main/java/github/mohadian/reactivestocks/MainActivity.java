@@ -14,8 +14,8 @@ import butterknife.ButterKnife;
 import github.mohadian.reactivestocks.adapter.StockDataManager;
 import github.mohadian.reactivestocks.data.StockUpdate;
 import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,14 +36,35 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         prepareRecyclerView();
 
-        Disposable disposable = new CompositeDisposable(
-                Observable.just("Hello! Please use this app responsibly!")
-                        .subscribe(s -> textView.setText(s)),
+        Observable.just("Hello! Please use this app responsibly!")
+                .subscribeOn(Schedulers.io())
+                .doOnDispose(() -> log("doOnDispose"))
+                .doOnComplete(() -> log("doOnComplete"))
+                .doOnNext(e -> log("doOnNext", e))
+                .doOnEach(e -> log("doOnEach"))
+                .doOnSubscribe((e) -> log("doOnSubscribe"))
+                .doOnTerminate(() -> log("doOnTerminate"))
+                .doFinally(() -> log("doFinally"))
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(data -> {
+                    log("subscribe", data);
+                    Log.d(TAG, "subscribe " + Thread.currentThread() + " data: " + data);
+                    textView.setText(data);
+                });
 
-                Observable.just(new StockUpdate("GOOGLE", 12.43, new Date()), new StockUpdate("APPL", 645.1, new Date()), new StockUpdate("TWTR", 1.43, new Date()))
-                        .doOnNext(stockUpdate -> Log.d(TAG, stockUpdate.getStockSymbol()))
-                        .subscribe(stockSymbol -> stockDataManager.add(stockSymbol)));
+        Observable.just(new StockUpdate("GOOGLE", 12.43, new Date()), new StockUpdate("APPL", 645.1, new Date()), new StockUpdate("TWTR", 1.43, new Date()))
+                .subscribe(stockSymbol -> stockDataManager.add(stockSymbol));
     }
+
+    private void log(String stage, String item) {
+        Log.d(TAG, stage + ":" + Thread.currentThread().getName() + ":" +
+                item);
+    }
+
+    private void log(String stage) {
+        Log.d(TAG, stage + ":" + Thread.currentThread().getName());
+    }
+
 
     private void prepareRecyclerView() {
         recyclerView.setHasFixedSize(true);
