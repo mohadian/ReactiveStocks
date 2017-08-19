@@ -1,3 +1,7 @@
+plugins {
+    id "me.tatarka.retrolambda" version "3.7.0"
+}
+
 apply plugin: 'com.android.application'
 
 android {
@@ -21,10 +25,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-//    compileOptions{
-//        targetCompatibility org.gradle.api.JavaVersion.VERSION_1_8
-//        sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_8
-//    }
+    compileOptions{
+        targetCompatibility org.gradle.api.JavaVersion.VERSION_1_8
+        sourceCompatibility org.gradle.api.JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
