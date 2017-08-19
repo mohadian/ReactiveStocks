@@ -14,6 +14,8 @@ import butterknife.ButterKnife;
 import github.mohadian.reactivestocks.adapter.StockDataManager;
 import github.mohadian.reactivestocks.data.StockUpdate;
 import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,12 +34,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ButterKnife.bind(this);
-
-        Observable.just("Hello! Please use this app responsibly!").subscribe(s -> textView.setText(s));
-
         prepareRecyclerView();
 
-        Observable.just(new StockUpdate("GOOGLE", 12.43, new Date()), new StockUpdate("APPL", 645.1, new Date()), new StockUpdate("TWTR", 1.43, new Date())).doOnNext(stockUpdate -> Log.d(TAG, stockUpdate.getStockSymbol())).subscribe(stockSymbol -> stockDataManager.add(stockSymbol));
+        Disposable disposable = new CompositeDisposable(
+                Observable.just("Hello! Please use this app responsibly!")
+                        .subscribe(s -> textView.setText(s)),
+
+                Observable.just(new StockUpdate("GOOGLE", 12.43, new Date()), new StockUpdate("APPL", 645.1, new Date()), new StockUpdate("TWTR", 1.43, new Date()))
+                        .doOnNext(stockUpdate -> Log.d(TAG, stockUpdate.getStockSymbol()))
+                        .subscribe(stockSymbol -> stockDataManager.add(stockSymbol)));
     }
 
     private void prepareRecyclerView() {
