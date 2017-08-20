@@ -8,13 +8,17 @@ import android.util.Log;
 import android.widget.TextView;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import github.mohadian.reactivestocks.adapter.StockDataManager;
 import github.mohadian.reactivestocks.data.StockUpdate;
 import io.reactivex.BackpressureStrategy;
+import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
@@ -58,8 +62,60 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(stockSymbol -> stockDataManager.add(stockSymbol));
 
         flowableExample();
+
+        completableExample();
+
+        singleExample();
+
+        maybeExample();
     }
 
+    /**
+     * Finally, the Maybe type is very similar to the Single type, but the item might not be returned to the subscriber in the end.
+     */
+    private void maybeExample() {
+        Maybe.just("Item")
+                .subscribe(
+                        s -> log("success: " + s),
+                        throwable -> log("error"),
+                        () -> log("onComplete")
+                );
+    }
+
+    /**
+     * Single provides a way to represent an Observable that will return just a single item (thus the name).
+     */
+    private void singleExample() {
+        Single.just("One item")
+                .subscribe((item) -> {
+                    log(item);
+                }, (throwable) -> {
+                    log(throwable);
+                });
+    }
+
+    /**
+     * Completable: This represents an action without a result that will be completed in the future
+     */
+    private void completableExample() {
+        Completable completable = Completable.fromAction(() -> {
+            log("Let's do something");
+        });
+
+        completable.subscribe(() -> {
+            log("Finished");
+        }, throwable -> {
+            log(throwable);
+        });
+    }
+
+    /**
+     * Flowable can be regarded as a special type of Observable (but internally it isn't). It has
+     * almost the same method signature such as the Observable as well.
+     * <p>
+     * The difference is that Flowable allows you to process items that emitted faster from the
+     * source than some of the following steps can handle.
+     */
     private void flowableExample() {
         PublishSubject<Integer> observable = PublishSubject.create();
         observable.observeOn(Schedulers.computation())
@@ -70,6 +126,43 @@ public class MainActivity extends AppCompatActivity {
 
         observable.toFlowable(BackpressureStrategy.MISSING)
                 .subscribe(v -> log("s", v.toString()), this::log);
+
+        if(1==1) return; //ignore the rest of method
+
+        //Dropping items: Dropping means that if the downstream processing steps cannot keep up with
+        // the pace of the source Observable, they will just drop the data that cannot be handled.
+        // This can only be used in cases when losing data is okay, and you care more about the
+        // values that were emitted in the beginning.
+        observable.toFlowable(BackpressureStrategy.DROP);
+        //or
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .onBackpressureDrop();
+
+        //Preserve latest: Preserving the last items means that if the downstream cannot cope with
+        // the items that are being sent to them, the app will stop emitting values and wait until
+        // they become available.
+        observable.toFlowable(BackpressureStrategy.LATEST);
+        //or
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .onBackpressureLatest();
+        //a method, .debounce(), can periodically take the last value at specific intervals:
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .debounce(10, TimeUnit.MILLISECONDS);
+
+        //Buffering
+        //if there is just a temporal slowdown in one of the consumers. In this case, the items
+        // emitted will be stored until later processing and when the slowdown is over, the
+        // consumers will catch up. If the consumers cannot catch up, at some point the buffer
+        // will run out of memory
+
+        observable.toFlowable(BackpressureStrategy.BUFFER);
+        //or
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .onBackpressureBuffer();
+
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .buffer(10);
+
     }
 
     private void log(Throwable throwable) {
