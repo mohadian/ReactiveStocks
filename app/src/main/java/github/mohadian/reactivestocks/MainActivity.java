@@ -13,9 +13,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import github.mohadian.reactivestocks.adapter.StockDataManager;
 import github.mohadian.reactivestocks.data.StockUpdate;
+import io.reactivex.BackpressureStrategy;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,6 +56,24 @@ public class MainActivity extends AppCompatActivity {
 
         Observable.just(new StockUpdate("GOOGLE", 12.43, new Date()), new StockUpdate("APPL", 645.1, new Date()), new StockUpdate("TWTR", 1.43, new Date()))
                 .subscribe(stockSymbol -> stockDataManager.add(stockSymbol));
+
+        flowableExample();
+    }
+
+    private void flowableExample() {
+        PublishSubject<Integer> observable = PublishSubject.create();
+        observable.observeOn(Schedulers.computation())
+                .subscribe(v -> log("s", v.toString()), this::log);
+        for (int i = 0; i < 1000000; i++) {
+            observable.onNext(i);
+        }
+
+        observable.toFlowable(BackpressureStrategy.MISSING)
+                .subscribe(v -> log("s", v.toString()), this::log);
+    }
+
+    private void log(Throwable throwable) {
+        Log.e("APP", "Error", throwable);
     }
 
     private void log(String stage, String item) {
