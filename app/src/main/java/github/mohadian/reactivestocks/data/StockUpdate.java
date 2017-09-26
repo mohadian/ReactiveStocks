@@ -10,19 +10,28 @@ public class StockUpdate implements Serializable {
     private final BigDecimal price;
     private final Date date;
 
-    public StockUpdate(String stockSymbol, double price, Date date) {
+    public StockUpdate(String stockSymbol, BigDecimal price, Date date) {
         this.stockSymbol = stockSymbol;
-        this.price = new BigDecimal(price);
+        this.price = price;
         this.date = date;
     }
 
     public String getStockSymbol() {
         return stockSymbol;
     }
+
     public BigDecimal getPrice() {
         return price;
     }
+
     public Date getDate() {
         return date;
+    }
+
+    public static StockUpdate create(YahooStockQuote r) {
+        String stock;
+        BigDecimal price;
+        Date date;
+        return new StockUpdate(r.getName(), r.getLastTradePriceOnly(), new Date());
     }
 }
